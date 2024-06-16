@@ -1,0 +1,13 @@
+[package]
+name = "host"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+methods = { path = "../methods" }
+common = { path = "../common" }
+
+risc0-zkvm = { version = "0.21.0" }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = "1.0"
+partial_binary_merkle = { git = "https://github.com/pwang200/partial_binary_merkle.git", rev = "2252049d" }
