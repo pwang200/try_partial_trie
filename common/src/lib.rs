@@ -27,9 +27,9 @@ pub struct Input {
 }
 
 impl Input {
-    pub fn new(init_size: usize, n_additions: usize) -> Input {
+    pub fn new(init_size: usize, n_additions: usize, partial: bool) -> Input {
         let mut fr = FakeRandom::new();
-        let trie = {
+        let mut trie = {
             let keys = fr.random_hashes(init_size);
             let leaves = fr.random_hashes(init_size);
             let items: Vec<(ID, Hash)> = keys.into_iter().zip(leaves).collect();
@@ -44,12 +44,17 @@ impl Input {
             keys.into_iter().zip(leaves).collect()
         };
 
-        Input { trie, kv }
+        let mut ids = Vec::new();
+        kv.iter().for_each(|(k, _v)| ids.push(k) );
+        if partial {
+            trie = trie.get_partial(&ids);
+        }
+
+        Input {trie, kv }
     }
 
-    pub fn process(&mut self) -> Option<Hash> {
+    pub fn verify_and_process(&mut self) -> Option<Hash> {
         if self.trie.verify_partial() {
-            //let mut temp: Vec<(ID, Hash)> = vec![];
             self.trie.insert_or_replace_batch(self.kv.drain(..).collect());
             Some(self.trie.root)
         } else {
@@ -64,10 +69,20 @@ mod tests {
 
     #[test]
     fn process_works() {
-        let init_size = 20usize;
-        let n_additions = 20usize;
-        let mut input = Input::new(init_size, n_additions);
-        let x = input.process();
+        let mut input = Input::new(0, 5, true);
+        let x = input.verify_and_process();
+        assert!(x.is_some());
+
+        let mut input = Input::new(1, 50, true);
+        let x = input.verify_and_process();
+        assert!(x.is_some());
+
+        let mut input = Input::new(100, 100, false);
+        let x = input.verify_and_process();
+        assert!(x.is_some());
+
+        let mut input = Input::new(10000, 50, true);
+        let x = input.verify_and_process();
         assert!(x.is_some());
     }
 }

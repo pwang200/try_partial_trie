@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-partial_binary_merkle = { git = "https://github.com/pwang200/partial_binary_merkle.git", rev = "c2c2b97" }
+partial_binary_merkle = { git = "https://github.com/pwang200/partial_binary_merkle.git", branch = "optim_a4_bt_rs" }
+#branch = "b_tree" }risc0_sha2 align4 no_optimization optim_a4_bt_rs
+#rev = "c2c2b97" }
 rand = "0.8.5"
 serde = { version = "1.0.203", features = ["derive"] }

@@ -1,15 +1,14 @@
 #![no_main]
-// If you want to try std support, also update the guest Cargo.toml file
-// #![no_std]  // std support is experimental
 
-// use partial_binary_merkle::{PartialMerkleTrie, Hash, ID};
 use common::Input;
 use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
 
 fn main() {
+    let start = env::cycle_count();
     let mut input: Input = env::read();
-    assert!(input.trie.verify_partial());
-    let r = input.process();
+    let r = input.verify_and_process();
     env::commit(&r);
+    let end = env::cycle_count();
+    eprintln!("cycle count: {}", end - start);
 }

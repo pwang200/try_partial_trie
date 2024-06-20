@@ -5,17 +5,29 @@ use methods::{
     TRIE_ELF, TRIE_ID,
 };
 use risc0_zkvm::{default_prover, ExecutorEnv};
+use clap::Parser;
 
-// AMD Ryzen Threadripper 3960X 24-Core, 14m6.681s, for 128 init_usize and 128 additions
+#[derive(Parser, Debug)]
+// #[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, default_value_t = 0)]
+    init_trie_size: usize,
+
+    #[arg(short, long, default_value_t = 0)]
+    new_additions: usize,
+
+    #[arg(long, default_value_t = false)]
+    partial_trie: bool,
+}
+
+// AMD Ryzen Threadripper 3960X 24-Core, 11m8.399s, for 100 init_usize and 100 additions
 fn main() {
-    // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
-    // tracing_subscriber::fmt()
-    //     .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
-    //     .init();
+    // let init_size = 10000usize;
+    // let n_additions  = 100usize;
+    let args = Args::parse();
 
-    let init_size = 12usize;
-    let n_additions  = 12usize;
-    let mut input = common::Input::new(init_size, n_additions);
+    println!("init trie size: {}, new additions: {}, use partial trie: {}", args.init_trie_size, args.new_additions, args.partial_trie);
+    let mut input = common::Input::new(args.init_trie_size, args.new_additions, args.partial_trie);
     assert!(input.trie.verify_partial());
     let env = ExecutorEnv::builder()
         .write(&input)
@@ -31,7 +43,7 @@ fn main() {
         .verify(TRIE_ID)
         .unwrap();
     println!("guest: {:?}", output);
-    let host_result = input.process();
+    let host_result = input.verify_and_process();
     println!("host : {:?}", host_result);
     assert_eq!(output, host_result);
 }
