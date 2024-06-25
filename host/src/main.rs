@@ -6,6 +6,14 @@ use methods::{
 };
 use risc0_zkvm::{default_prover, ExecutorEnv};
 use clap::Parser;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+pub fn clock() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Failed to measure time")
+        .as_millis()
+}
 
 #[derive(Parser, Debug)]
 // #[command(version, about, long_about = None)]
@@ -29,6 +37,8 @@ fn main() {
     println!("init trie size: {}, new additions: {}, use partial trie: {}", args.init_trie_size, args.new_additions, args.partial_trie);
     let mut input = common::Input::new(args.init_trie_size, args.new_additions, args.partial_trie);
     assert!(input.trie.verify_partial());
+
+    let time_start = clock();
     let env = ExecutorEnv::builder()
         .write(&input)
         .unwrap()
@@ -38,10 +48,11 @@ fn main() {
     let receipt = prover
         .prove(env, TRIE_ELF)
         .unwrap();
+    let time = clock() - time_start;
+    println!("Prover, prove time {}", time / 1000);
+
     let output: Option<Hash> = receipt.journal.decode().unwrap();
-    receipt
-        .verify(TRIE_ID)
-        .unwrap();
+    receipt.verify(TRIE_ID).expect("proof verification failed");
     println!("guest: {:?}", output);
     let host_result = input.verify_and_process();
     println!("host : {:?}", host_result);
